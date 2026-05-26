@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 查询题库题目关联请求
@@ -43,4 +42,6 @@ public class QuestionBankQuestionQueryRequest extends PageRequest implements Ser
     private Long userId;
 
     private static final long serialVersionUID = 1L;
+
+
 }

@@ -1,13 +1,11 @@
 package com.yuan.mianshi.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.yuan.mianshi.model.entity.QuestionBank;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 题库视图
@@ -52,7 +50,6 @@ public class QuestionBankVO implements Serializable {
      * 更新时间
      */
     private Date updateTime;
-
 
 
     /**
