@@ -9,18 +9,25 @@ import com.yuan.mianshi.common.ResultUtils;
 import com.yuan.mianshi.constant.UserConstant;
 import com.yuan.mianshi.exception.BusinessException;
 import com.yuan.mianshi.exception.ThrowUtils;
+import com.yuan.mianshi.model.dto.question.QuestionQueryRequest;
 import com.yuan.mianshi.model.dto.questionbank.QuestionBankAddRequest;
 import com.yuan.mianshi.model.dto.questionbank.QuestionBankEditRequest;
 import com.yuan.mianshi.model.dto.questionbank.QuestionBankQueryRequest;
 import com.yuan.mianshi.model.dto.questionbank.QuestionBankUpdateRequest;
+import com.yuan.mianshi.model.entity.Question;
 import com.yuan.mianshi.model.entity.QuestionBank;
 import com.yuan.mianshi.model.entity.User;
 import com.yuan.mianshi.model.vo.QuestionBankVO;
 import com.yuan.mianshi.service.QuestionBankService;
+import com.yuan.mianshi.service.QuestionService;
 import com.yuan.mianshi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -42,6 +49,8 @@ public class QuestionBankController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private QuestionService questionService;
     // region 增删改查
 
     /**
@@ -126,21 +135,50 @@ public class QuestionBankController {
         return ResultUtils.success(true);
     }
 
+//    /**
+//     * 根据 id 获取题库（封装类）
+//     *
+//     * @param id
+//     * @return
+//     */
+//    @GetMapping("/get/vo")
+//    public BaseResponse<QuestionBankVO> getQuestionBankVOById(long id, HttpServletRequest request) {
+//        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+//        // 查询数据库
+//        QuestionBank questionBank = questionBankService.getById(id);
+//        ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR);
+//        // 获取封装类
+//        return ResultUtils.success(questionBankService.getQuestionBankVO(questionBank, request));
+//    }
+
     /**
-     * 根据 id 获取题库（封装类）
      *
-     * @param id
+     * @param questionBankQueryRequest
+     * @param request
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<QuestionBankVO> getQuestionBankVOById(long id, HttpServletRequest request) {
+    public BaseResponse<QuestionBankVO> getQuestionBankVOById(QuestionBankQueryRequest questionBankQueryRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(questionBankQueryRequest == null, ErrorCode.PARAMS_ERROR);
+        Long id = questionBankQueryRequest.getId();
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
         // 查询数据库
         QuestionBank questionBank = questionBankService.getById(id);
         ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR);
+        // 查询题库封装类
+        QuestionBankVO questionBankVO = questionBankService.getQuestionBankVO(questionBank, request);
+        // 是否要关联查询题库下的题目列表
+        boolean needQueryQuestionList = questionBankQueryRequest.isNeedQueryQuestionList();
+        if (needQueryQuestionList) {
+            QuestionQueryRequest questionQueryRequest = new QuestionQueryRequest();
+            questionQueryRequest.setQuestionBankId(id);
+            Page<Question> questionPage = questionService.listQuestionByPage(questionQueryRequest);
+            questionBankVO.setQuestionPage(questionPage);
+        }
         // 获取封装类
-        return ResultUtils.success(questionBankService.getQuestionBankVO(questionBank, request));
+        return ResultUtils.success(questionBankVO);
     }
+
 
     /**
      * 分页获取题库列表（仅管理员可用）

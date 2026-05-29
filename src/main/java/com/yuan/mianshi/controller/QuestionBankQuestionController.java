@@ -1,5 +1,7 @@
 package com.yuan.mianshi.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuan.mianshi.annotation.AuthCheck;
 import com.yuan.mianshi.common.BaseResponse;
@@ -11,6 +13,7 @@ import com.yuan.mianshi.exception.BusinessException;
 import com.yuan.mianshi.exception.ThrowUtils;
 import com.yuan.mianshi.model.dto.questionbankquestion.QuestionBankQuestionAddRequest;
 import com.yuan.mianshi.model.dto.questionbankquestion.QuestionBankQuestionQueryRequest;
+import com.yuan.mianshi.model.dto.questionbankquestion.QuestionBankQuestionRemoveRequest;
 import com.yuan.mianshi.model.dto.questionbankquestion.QuestionBankQuestionUpdateRequest;
 import com.yuan.mianshi.model.entity.QuestionBankQuestion;
 import com.yuan.mianshi.model.entity.User;
@@ -19,7 +22,11 @@ import com.yuan.mianshi.service.QuestionBankQuestionService;
 import com.yuan.mianshi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -51,6 +58,7 @@ public class QuestionBankQuestionController {
      * @return
      */
     @PostMapping("/add")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> addQuestionBankQuestion(@RequestBody QuestionBankQuestionAddRequest questionBankQuestionAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(questionBankQuestionAddRequest == null, ErrorCode.PARAMS_ERROR);
         // todo 在此处将实体类和 DTO 进行转换
@@ -201,6 +209,25 @@ public class QuestionBankQuestionController {
         // 获取封装类
         return ResultUtils.success(questionBankQuestionService.getQuestionBankQuestionVOPage(questionBankQuestionPage, request));
     }
+
+    @PostMapping("/remove")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> removeQuestionBankQuestion(
+            @RequestBody QuestionBankQuestionRemoveRequest questionBankQuestionRemoveRequest
+    ) {
+        // 参数校验
+        ThrowUtils.throwIf(questionBankQuestionRemoveRequest == null, ErrorCode.PARAMS_ERROR);
+        Long questionBankId = questionBankQuestionRemoveRequest.getQuestionBankId();
+        Long questionId = questionBankQuestionRemoveRequest.getQuestionId();
+        ThrowUtils.throwIf(questionBankId == null || questionId == null, ErrorCode.PARAMS_ERROR);
+        // 构造查询
+        LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
+                .eq(QuestionBankQuestion::getQuestionId, questionId)
+                .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
+        boolean result = questionBankQuestionService.remove(lambdaQueryWrapper);
+        return ResultUtils.success(result);
+    }
+
 
     /**
      * 编辑题库题目关联（给用户使用）

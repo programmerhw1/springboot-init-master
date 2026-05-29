@@ -9,15 +9,20 @@ import com.yuan.mianshi.constant.CommonConstant;
 import com.yuan.mianshi.exception.ThrowUtils;
 import com.yuan.mianshi.mapper.QuestionBankQuestionMapper;
 import com.yuan.mianshi.model.dto.questionbankquestion.QuestionBankQuestionQueryRequest;
+import com.yuan.mianshi.model.entity.Question;
+import com.yuan.mianshi.model.entity.QuestionBank;
 import com.yuan.mianshi.model.entity.QuestionBankQuestion;
 import com.yuan.mianshi.model.entity.User;
 import com.yuan.mianshi.model.vo.QuestionBankQuestionVO;
 import com.yuan.mianshi.model.vo.UserVO;
 import com.yuan.mianshi.service.QuestionBankQuestionService;
+import com.yuan.mianshi.service.QuestionBankService;
+import com.yuan.mianshi.service.QuestionService;
 import com.yuan.mianshi.service.UserService;
 import com.yuan.mianshi.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -40,28 +45,51 @@ public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQue
     @Resource
     private UserService userService;
 
+    @Resource
+    @Lazy
+    private QuestionService questionService;
+
+    @Resource
+    private QuestionBankService questionBankService;
+
     /**
      * 校验数据
      *
      * @param questionBankQuestion
      * @param add                  对创建的数据进行校验
      */
+//    @Override
+//    public void validQuestionBankQuestion(QuestionBankQuestion questionBankQuestion, boolean add) {
+//        ThrowUtils.throwIf(questionBankQuestion == null, ErrorCode.PARAMS_ERROR);
+////        // todo 从对象中取值
+////        String title = questionBankQuestion.getTitle();
+////        // 创建数据时，参数不能为空
+////        if (add) {
+////            // todo 补充校验规则
+////            ThrowUtils.throwIf(StringUtils.isBlank(title), ErrorCode.PARAMS_ERROR);
+////        }
+////        // 修改数据时，有参数则校验
+////        // todo 补充校验规则
+////        if (StringUtils.isNotBlank(title)) {
+////            ThrowUtils.throwIf(title.length() > 80, ErrorCode.PARAMS_ERROR, "标题过长");
+////        }
+//    }
     @Override
     public void validQuestionBankQuestion(QuestionBankQuestion questionBankQuestion, boolean add) {
         ThrowUtils.throwIf(questionBankQuestion == null, ErrorCode.PARAMS_ERROR);
-//        // todo 从对象中取值
-//        String title = questionBankQuestion.getTitle();
-//        // 创建数据时，参数不能为空
-//        if (add) {
-//            // todo 补充校验规则
-//            ThrowUtils.throwIf(StringUtils.isBlank(title), ErrorCode.PARAMS_ERROR);
-//        }
-//        // 修改数据时，有参数则校验
-//        // todo 补充校验规则
-//        if (StringUtils.isNotBlank(title)) {
-//            ThrowUtils.throwIf(title.length() > 80, ErrorCode.PARAMS_ERROR, "标题过长");
-//        }
+        // 题目和题库必须存在
+        Long questionId = questionBankQuestion.getQuestionId();
+        if (questionId != null) {
+            Question question = questionService.getById(questionId);
+            ThrowUtils.throwIf(question == null, ErrorCode.NOT_FOUND_ERROR, "题目不存在");
+        }
+        Long questionBankId = questionBankQuestion.getQuestionBankId();
+        if (questionBankId != null) {
+            QuestionBank questionBank = questionBankService.getById(questionBankId);
+            ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR, "题库不存在");
+        }
     }
+
 
     /**
      * 获取查询条件
