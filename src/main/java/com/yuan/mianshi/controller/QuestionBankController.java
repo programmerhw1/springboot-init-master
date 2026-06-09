@@ -1,5 +1,6 @@
 package com.yuan.mianshi.controller;
 
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuan.mianshi.annotation.AuthCheck;
 import com.yuan.mianshi.common.BaseResponse;
@@ -157,6 +158,32 @@ public class QuestionBankController {
      * @param request
      * @return
      */
+//    @GetMapping("/get/vo")
+//    public BaseResponse<QuestionBankVO> getQuestionBankVOById(QuestionBankQueryRequest questionBankQueryRequest, HttpServletRequest request) {
+//        ThrowUtils.throwIf(questionBankQueryRequest == null, ErrorCode.PARAMS_ERROR);
+//        Long id = questionBankQueryRequest.getId();
+//        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+//        // 查询数据库
+//        QuestionBank questionBank = questionBankService.getById(id);
+//        ThrowUtils.throwIf(questionBank == null, ErrorCode.NOT_FOUND_ERROR);
+//        // 查询题库封装类
+//        QuestionBankVO questionBankVO = questionBankService.getQuestionBankVO(questionBank, request);
+//        // 是否要关联查询题库下的题目列表
+//        boolean needQueryQuestionList = questionBankQueryRequest.isNeedQueryQuestionList();
+//        if (needQueryQuestionList) {
+//            QuestionQueryRequest questionQueryRequest = new QuestionQueryRequest();
+//            questionQueryRequest.setQuestionBankId(id);
+//            // 可以按需传递更多参数
+//            questionQueryRequest.setPageSize(questionBankQueryRequest.getPageSize());
+//            questionQueryRequest.setCurrent(questionBankQueryRequest.getCurrent());
+//            // 封装 question => questionVO
+//            Page<Question> questionPage = questionService.listQuestionByPage(questionQueryRequest);
+////            questionBankVO.setQuestionPage(questionPage);
+//            questionBankVO.setQuestionPage(questionService.getQuestionVOPage(questionPage, request));
+//        }
+//        // 获取封装类
+//        return ResultUtils.success(questionBankVO);
+//    }
     @GetMapping("/get/vo")
     public BaseResponse<QuestionBankVO> getQuestionBankVOById(QuestionBankQueryRequest questionBankQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(questionBankQueryRequest == null, ErrorCode.PARAMS_ERROR);
@@ -172,8 +199,14 @@ public class QuestionBankController {
         if (needQueryQuestionList) {
             QuestionQueryRequest questionQueryRequest = new QuestionQueryRequest();
             questionQueryRequest.setQuestionBankId(id);
+            // 可以按需传递更多参数
+            questionQueryRequest.setPageSize(questionBankQueryRequest.getPageSize());
+            questionQueryRequest.setCurrent(questionBankQueryRequest.getCurrent());
+            // 封装 question => questionVO
             Page<Question> questionPage = questionService.listQuestionByPage(questionQueryRequest);
-            questionBankVO.setQuestionPage(questionPage);
+//            Page<QuestionVO> questionVOPage = questionService.getQuestionVOPage(questionPage, request);
+            questionBankVO.setQuestionPage(questionService.getQuestionVOPage(questionPage, request));
+
         }
         // 获取封装类
         return ResultUtils.success(questionBankVO);
@@ -206,7 +239,7 @@ public class QuestionBankController {
      */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<QuestionBankVO>> listQuestionBankVOByPage(@RequestBody QuestionBankQueryRequest questionBankQueryRequest,
-                                                               HttpServletRequest request) {
+                                                                       HttpServletRequest request) {
         long current = questionBankQueryRequest.getCurrent();
         long size = questionBankQueryRequest.getPageSize();
         // 限制爬虫
@@ -227,7 +260,7 @@ public class QuestionBankController {
      */
     @PostMapping("/my/list/page/vo")
     public BaseResponse<Page<QuestionBankVO>> listMyQuestionBankVOByPage(@RequestBody QuestionBankQueryRequest questionBankQueryRequest,
-                                                                 HttpServletRequest request) {
+                                                                         HttpServletRequest request) {
         ThrowUtils.throwIf(questionBankQueryRequest == null, ErrorCode.PARAMS_ERROR);
         // 补充查询条件，只查询当前登录用户的数据
         User loginUser = userService.getLoginUser(request);
